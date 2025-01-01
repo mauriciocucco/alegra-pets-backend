@@ -1,0 +1,125 @@
+openapi: 3.0.0
+components:
+  schemas:
+    CreateFoundationRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the foundation
+    CreateFoundationResponse:
+      type: object
+      properties:
+        foundationId:
+          type: string
+          description: The ID of the created foundation
+        message:
+          type: string
+          description: Success message
+    AddPetRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the pet
+        breed:
+          type: string
+          description: The breed of the pet
+        status:
+          type: string
+          description: The status of the pet
+        type:
+          type: string
+          description: The type of the pet
+    AddPetResponse:
+      type: object
+      properties:
+        petId:
+          type: string
+          description: The ID of the added pet
+        message:
+          type: string
+          description: Success message
+    GetPetResponse:
+      type: object
+      properties:
+        petId:
+          type: string
+          description: The ID of the pet
+        name:
+          type: string
+          description: The name of the pet
+        breed:
+          type: string
+          description: The breed of the pet
+        status:
+          type: string
+          description: The status of the pet
+        type:
+          type: string
+          description: The type of the pet
+    ListPetsResponse:
+      type: array
+      items:
+        type: object
+        properties:
+          petId:
+            type: string
+            description: The ID of the pet
+          name:
+            type: string
+            description: The name of the pet
+          breed:
+            type: string
+            description: The breed of the pet
+          status:
+            type: string
+            description: The status of the pet
+          type:
+            type: string
+            description: The type of the pet
+    DeletePetResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Success message
+    UpdatePetRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the pet
+        breed:
+          type: string
+          description: The breed of the pet
+        status:
+          type: string
+          description: The status of the pet
+        type:
+          type: string
+          description: The type of the pet
+    UpdatePetResponse:
+      type: object
+      properties:
+        petId:
+          type: string
+          description: The ID of the pet
+        name:
+          type: string
+          description: The name of the pet
+        breed:
+          type: string
+          description: The breed of the pet
+        status:
+          type: string
+          description: The status of the pet
+        type:
+          type: string
+          description: The type of the pet
+  securitySchemes: {}
+info:
+  title: Alegra Pets API
+  description: API for managing pets within foundations.
+  version: '1'
+paths: {}

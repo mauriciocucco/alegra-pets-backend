@@ -1,0 +1,377 @@
+service: alegra-pets-backend
+
+frameworkVersion: "4"
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: us-east-1
+  stage: ${env:STAGE, 'dev'}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:UpdateItem
+          Resource:
+            - ${env:FOUNDATIONS_TABLE_ARN}
+            - ${env:PETS_TABLE_ARN}
+            - ${env:USERS_TABLE_ARN}
+            - ${env:USERS_TABLE_ARN}/index/emailIndex
+        - Effect: Allow
+          Action:
+            - sns:Publish
+          Resource:
+            - ${env:PET_HAPPY_TOPIC_ARN}
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+            - s3:GetObject
+          Resource:
+            - ${env:REQUESTS_BUCKET_ARN}/*
+
+  httpApi:
+    name: petsHttpApi
+    cors: false
+    authorizers:
+      myLambdaAuthorizer:
+        type: request
+        # This name must match the "name" of your authorizer function
+        functionName: myAuthorizer
+        identitySource:
+          - $request.header.Authorization
+        authorizerPayloadFormatVersion: 2.0
+
+  environment:
+    FOUNDATIONS_TABLE_NAME: ${env:FOUNDATIONS_TABLE_NAME}
+    PETS_TABLE_NAME: ${env:PETS_TABLE_NAME}
+    USERS_TABLE_NAME: ${env:USERS_TABLE_NAME}
+    PET_HAPPY_TOPIC_ARN: ${env:PET_HAPPY_TOPIC_ARN}
+    REQUESTS_BUCKET_NAME: ${env:REQUESTS_BUCKET_NAME}
+
+plugins:
+  - serverless-dotenv-plugin
+  - serverless-openapi-documentation
+  # - serverless-offline
+
+layers:
+  shared:
+    path: layers/nodejs
+    name: ${self:service}-shared-layer
+    compatibleRuntimes:
+      - nodejs20.x
+
+functions:
+  # Lambda Authorizer
+  myAuthorizer:
+    handler: src/authorizer/authorizer.handler
+    environment:
+      USERS_TABLE_NAME: ${env:USERS_TABLE_NAME}
+      PETS_TABLE_NAME: ${env:PETS_TABLE_NAME}
+
+  # Crear Fundación
+  createFoundation:
+    handler: src/handlers/createFoundation.handler
+    layers:
+      - { Ref: SharedLambdaLayer }
+    events:
+      - httpApi:
+          path: /foundations
+          method: post
+          authorizer:
+            name: myLambdaAuthorizer
+          documentation:
+            summary: "Create Foundation"
+            description: "Creates a new foundation"
+            requestModels:
+              "application/json": CreateFoundationRequest
+            methodResponses:
+              - statusCode: 201
+                responseModels:
+                  "application/json": CreateFoundationResponse
+
+  # Agregar una mascota
+  addPet:
+    handler: src/handlers/addPet.handler
+    layers:
+      - { Ref: SharedLambdaLayer }
+    events:
+      - httpApi:
+          path: /pets
+          method: post
+          authorizer:
+            name: myLambdaAuthorizer
+          documentation:
+            summary: "Add Pet"
+            description: "Adds a new pet"
+            requestModels:
+              "application/json": AddPetRequest
+            methodResponses:
+              - statusCode: 201
+                responseModels:
+                  "application/json": AddPetResponse
+
+  # Consultar una mascota por id
+  getPet:
+    handler: src/handlers/getPet.handler
+    layers:
+      - { Ref: SharedLambdaLayer }
+    events:
+      - httpApi:
+          path: /pets/{petId}
+          method: get
+          authorizer:
+            name: myLambdaAuthorizer
+          documentation:
+            summary: "Get Pet"
+            description: "Gets a pet by ID"
+            pathParams:
+              - name: petId
+                description: "The ID of the pet"
+                schema:
+                  type: string
+            methodResponses:
+              - statusCode: 200
+                responseModels:
+                  "application/json": GetPetResponse
+
+  # Consultar todas las mascotas de una fundación (con filtros)
+  listPets:
+    handler: src/handlers/listPets.handler
+    layers:
+      - { Ref: SharedLambdaLayer }
+    events:
+      - httpApi:
+          path: /foundations/{foundationId}/pets
+          method: get
+          authorizer:
+            name: myLambdaAuthorizer
+          documentation:
+            summary: "List Pets"
+            description: "Lists pets for a foundation"
+            pathParams:
+              - name: foundationId
+                description: "The ID of the foundation"
+                schema:
+                  type: string
+            queryParams:
+              - name: type
+                description: "Filter by type"
+                schema:
+                  type: string
+              - name: breed
+                description: "Filter by breed"
+                schema:
+                  type: string
+              - name: name
+                description: "Filter by name"
+                schema:
+                  type: string
+            methodResponses:
+              - statusCode: 200
+                responseModels:
+                  "application/json": ListPetsResponse
+
+  # Eliminar una mascota
+  deletePet:
+    handler: src/handlers/deletePet.handler
+    layers:
+      - { Ref: SharedLambdaLayer }
+    events:
+      - httpApi:
+          path: /pets/{petId}
+          method: delete
+          authorizer:
+            name: myLambdaAuthorizer
+          documentation:
+            summary: "Delete Pet"
+            description: "Deletes a pet by ID"
+            pathParams:
+              - name: petId
+                description: "The ID of the pet"
+                schema:
+                  type: string
+            methodResponses:
+              - statusCode: 200
+                responseModels:
+                  "application/json": DeletePetResponse
+
+  # Actualizar una mascota
+  updatePet:
+    handler: src/handlers/updatePet.handler
+    layers:
+      - { Ref: SharedLambdaLayer }
+    events:
+      - httpApi:
+          path: /pets/{petId}
+          method: put
+          authorizer:
+            name: myLambdaAuthorizer
+          documentation:
+            summary: "Update Pet"
+            description: "Updates a pet by ID"
+            pathParams:
+              - name: petId
+                description: "The ID of the pet"
+                schema:
+                  type: string
+            requestModels:
+              "application/json": UpdatePetRequest
+            methodResponses:
+              - statusCode: 200
+                responseModels:
+                  "application/json": UpdatePetResponse
+
+custom:
+  documentation:
+    version: "1"
+    title: "Alegra Pets API"
+    description: "API for managing pets within foundations."
+    models:
+      - name: CreateFoundationRequest
+        description: "Request model for creating a foundation"
+        contentType: "application/json"
+        schema:
+          type: object
+          properties:
+            name:
+              type: string
+              description: "The name of the foundation"
+      - name: CreateFoundationResponse
+        description: "Response model for creating a foundation"
+        contentType: "application/json"
+        schema:
+          type: object
+          properties:
+            foundationId:
+              type: string
+              description: "The ID of the created foundation"
+            message:
+              type: string
+              description: "Success message"
+      - name: AddPetRequest
+        description: "Request model for adding a pet"
+        contentType: "application/json"
+        schema:
+          type: object
+          properties:
+            name:
+              type: string
+              description: "The name of the pet"
+            breed:
+              type: string
+              description: "The breed of the pet"
+            status:
+              type: string
+              description: "The status of the pet"
+            type:
+              type: string
+              description: "The type of the pet"
+      - name: AddPetResponse
+        description: "Response model for adding a pet"
+        contentType: "application/json"
+        schema:
+          type: object
+          properties:
+            petId:
+              type: string
+              description: "The ID of the added pet"
+            message:
+              type: string
+              description: "Success message"
+      - name: GetPetResponse
+        description: "Response model for getting a pet"
+        contentType: "application/json"
+        schema:
+          type: object
+          properties:
+            petId:
+              type: string
+              description: "The ID of the pet"
+            name:
+              type: string
+              description: "The name of the pet"
+            breed:
+              type: string
+              description: "The breed of the pet"
+            status:
+              type: string
+              description: "The status of the pet"
+            type:
+              type: string
+              description: "The type of the pet"
+      - name: ListPetsResponse
+        description: "Response model for listing pets"
+        contentType: "application/json"
+        schema:
+          type: array
+          items:
+            type: object
+            properties:
+              petId:
+                type: string
+                description: "The ID of the pet"
+              name:
+                type: string
+                description: "The name of the pet"
+              breed:
+                type: string
+                description: "The breed of the pet"
+              status:
+                type: string
+                description: "The status of the pet"
+              type:
+                type: string
+                description: "The type of the pet"
+      - name: DeletePetResponse
+        description: "Response model for deleting a pet"
+        contentType: "application/json"
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+              description: "Success message"
+      - name: UpdatePetRequest
+        description: "Request model for updating a pet"
+        contentType: "application/json"
+        schema:
+          type: object
+          properties:
+            name:
+              type: string
+              description: "The name of the pet"
+            breed:
+              type: string
+              description: "The breed of the pet"
+            status:
+              type: string
+              description: "The status of the pet"
+            type:
+              type: string
+              description: "The type of the pet"
+      - name: UpdatePetResponse
+        description: "Response model for updating a pet"
+        contentType: "application/json"
+        schema:
+          type: object
+          properties:
+            petId:
+              type: string
+              description: "The ID of the pet"
+            name:
+              type: string
+              description: "The name of the pet"
+            breed:
+              type: string
+              description: "The breed of the pet"
+            status:
+              type: string
+              description: "The status of the pet"
+            type:
+              type: string
+              description: "The type of the pet"
