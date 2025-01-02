@@ -57,7 +57,7 @@ provider:
 
 plugins:
   - serverless-dotenv-plugin
-  - serverless-openapi-documentation
+  - serverless-openapi-documenter
   # - serverless-offline
 
 layers:
@@ -84,6 +84,24 @@ functions:
       - httpApi:
           path: /foundations
           method: post
+          documentation:
+            summary: "Create Foundation"
+            description: "Creates a new foundation"
+            requestBody:
+              description: "New foundation data"
+            requestModels:
+              application/json: "CreateFoundationRequest"
+            methodResponses:
+              - statusCode: 201
+                responseBody:
+                  description: "Foundation created"
+                responseModels:
+                  application/json: "CreateFoundationResponse"
+              - statusCode: 403
+                responseBody:
+                  description: "Forbidden"
+                responseModels:
+                  application/json: "ForbiddenResponse"
 
   # Agregar una mascota
   addPet:
@@ -96,6 +114,24 @@ functions:
           method: post
           authorizer:
             name: myLambdaAuthorizer
+          documentation:
+            summary: "Add a new pet"
+            description: "Adds a new pet to the foundation after verifying foundation access."
+            requestBody:
+              description: "Pet details to add"
+            requestModels:
+              application/json: "AddPetRequest"
+            methodResponses:
+              - statusCode: 201
+                responseBody:
+                  description: "Pet added successfully."
+                responseModels:
+                  application/json: "AddPetResponse"
+              - statusCode: 403
+                responseBody:
+                  description: "Forbidden"
+                responseModels:
+                  application/json: "ForbiddenResponse"
 
   # Consultar una mascota por id
   getPet:
@@ -108,6 +144,24 @@ functions:
           method: get
           authorizer:
             name: myLambdaAuthorizer
+          documentation:
+            summary: "Get Pet"
+            description: "Retrieve a pet by ID"
+            pathParams:
+              - name: petId
+                schema:
+                  type: string
+            methodResponses:
+              - statusCode: 200
+                responseBody:
+                  description: "Pet details"
+                responseModels:
+                  application/json: "GetPetResponse"
+              - statusCode: 403
+                responseBody:
+                  description: "Forbidden"
+                responseModels:
+                  application/json: "ForbiddenResponse"
 
   # Consultar todas las mascotas de una fundación (con filtros)
   listPets:
@@ -120,6 +174,34 @@ functions:
           method: get
           authorizer:
             name: myLambdaAuthorizer
+          documentation:
+            summary: "List Pets"
+            description: "Lists pets for a foundation with optional filters."
+            pathParams:
+              - name: foundationId
+                schema:
+                  type: string
+            queryParams:
+              - name: type
+                schema:
+                  type: string
+              - name: breed
+                schema:
+                  type: string
+              - name: name
+                schema:
+                  type: string
+            methodResponses:
+              - statusCode: 200
+                responseBody:
+                  description: "Array of pets that match the provided filters."
+                responseModels:
+                  application/json: "ListPetsResponse"
+              - statusCode: 403
+                responseBody:
+                  description: "Forbidden"
+                responseModels:
+                  application/json: "ForbiddenResponse"
 
   # Eliminar una mascota
   deletePet:
@@ -132,6 +214,24 @@ functions:
           method: delete
           authorizer:
             name: myLambdaAuthorizer
+          documentation:
+            summary: "Delete Pet"
+            description: "Deletes a pet by its ID."
+            pathParams:
+              - name: petId
+                schema:
+                  type: string
+            methodResponses:
+              - statusCode: 200
+                responseBody:
+                  description: "Pet successfully deleted."
+                responseModels:
+                  application/json: "DeletePetResponse"
+              - statusCode: 403
+                responseBody:
+                  description: "Forbidden"
+                responseModels:
+                  application/json: "ForbiddenResponse"
 
   # Actualizar una mascota
   updatePet:
@@ -144,153 +244,155 @@ functions:
           method: put
           authorizer:
             name: myLambdaAuthorizer
+          documentation:
+            summary: "Update Pet"
+            description: "Updates a pet by its ID."
+            pathParams:
+              - name: petId
+                schema:
+                  type: string
+            requestBody:
+              description: "Fields to update in the pet record."
+            requestModels:
+              application/json: "UpdatePetRequest"
+            methodResponses:
+              - statusCode: 200
+                responseBody:
+                  description: "Pet successfully updated."
+                responseModels:
+                  application/json: "UpdatePetResponse"
+              - statusCode: 403
+                responseBody:
+                  description: "Forbidden"
+                responseModels:
+                  application/json: "ForbiddenResponse"
 
 custom:
   documentation:
-    version: "1"
+    outputFileName: openapi-httpapi.yml
+    apiType: httpApi
+    version: 1.0.0
     title: "Alegra Pets API"
-    description: "API for managing pets within foundations."
+    description: "API for managing pets."
+    termsOfService: https://example.com/terms
+    contactName: "My Team"
+    contactEmail: "support@example.com"
+    licenseName: "MIT"
+    licenseUrl: "https://opensource.org/licenses/MIT"
     models:
+      - name: ForbiddenResponse
+        contentType: "application/json"
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
       - name: CreateFoundationRequest
-        description: "Request model for creating a foundation"
         contentType: "application/json"
         schema:
           type: object
           properties:
             name:
               type: string
-              description: "The name of the foundation"
       - name: CreateFoundationResponse
-        description: "Response model for creating a foundation"
         contentType: "application/json"
+        statusCode: 201
         schema:
           type: object
           properties:
             foundationId:
               type: string
-              description: "The ID of the created foundation"
             message:
               type: string
-              description: "Success message"
       - name: AddPetRequest
-        description: "Request model for adding a pet"
         contentType: "application/json"
         schema:
           type: object
           properties:
             name:
               type: string
-              description: "The name of the pet"
             breed:
               type: string
-              description: "The breed of the pet"
             status:
               type: string
-              description: "The status of the pet"
             type:
               type: string
-              description: "The type of the pet"
       - name: AddPetResponse
-        description: "Response model for adding a pet"
         contentType: "application/json"
         schema:
           type: object
           properties:
             petId:
               type: string
-              description: "The ID of the added pet"
             message:
               type: string
-              description: "Success message"
       - name: GetPetResponse
-        description: "Response model for getting a pet"
         contentType: "application/json"
         schema:
           type: object
           properties:
             petId:
               type: string
-              description: "The ID of the pet"
             name:
               type: string
-              description: "The name of the pet"
             breed:
               type: string
-              description: "The breed of the pet"
             status:
               type: string
-              description: "The status of the pet"
             type:
               type: string
-              description: "The type of the pet"
       - name: ListPetsResponse
-        description: "Response model for listing pets"
         contentType: "application/json"
         schema:
-          type: array
-          items:
-            type: object
-            properties:
-              petId:
-                type: string
-                description: "The ID of the pet"
-              name:
-                type: string
-                description: "The name of the pet"
-              breed:
-                type: string
-                description: "The breed of the pet"
-              status:
-                type: string
-                description: "The status of the pet"
-              type:
-                type: string
-                description: "The type of the pet"
+          type: object
+          properties:
+            pets:
+              type: array
+              items:
+                $ref: "#/components/schemas/Pet"
+      - name: Pet
+        contentType: "application/json"
+        schema:
+          type: object
+          properties:
+            petId:
+              type: string
+            name:
+              type: string
+            breed:
+              type: string
+            status:
+              type: string
+            type:
+              type: string
       - name: DeletePetResponse
-        description: "Response model for deleting a pet"
         contentType: "application/json"
         schema:
           type: object
           properties:
             message:
               type: string
-              description: "Success message"
-      - name: UpdatePetRequest
-        description: "Request model for updating a pet"
-        contentType: "application/json"
-        schema:
-          type: object
-          properties:
-            name:
-              type: string
-              description: "The name of the pet"
-            breed:
-              type: string
-              description: "The breed of the pet"
-            status:
-              type: string
-              description: "The status of the pet"
-            type:
-              type: string
-              description: "The type of the pet"
-      - name: UpdatePetResponse
-        description: "Response model for updating a pet"
-        contentType: "application/json"
-        schema:
-          type: object
-          properties:
             petId:
               type: string
-              description: "The ID of the pet"
+      - name: UpdatePetRequest
+        contentType: "application/json"
+        schema:
+          type: object
+          properties:
             name:
               type: string
-              description: "The name of the pet"
             breed:
               type: string
-              description: "The breed of the pet"
             status:
               type: string
-              description: "The status of the pet"
             type:
               type: string
-              description: "The type of the pet"
+      - name: UpdatePetResponse
+        contentType: "application/json"
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+            pet:
+              $ref: "#/components/schemas/Pet"

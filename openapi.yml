@@ -1,125 +1,305 @@
 openapi: 3.0.0
 components:
   schemas:
+    ForbiddenResponse:
+      type: object
+      properties:
+        message:
+          type: string
     CreateFoundationRequest:
       type: object
       properties:
         name:
           type: string
-          description: The name of the foundation
     CreateFoundationResponse:
       type: object
       properties:
         foundationId:
           type: string
-          description: The ID of the created foundation
         message:
           type: string
-          description: Success message
     AddPetRequest:
       type: object
       properties:
         name:
           type: string
-          description: The name of the pet
         breed:
           type: string
-          description: The breed of the pet
         status:
           type: string
-          description: The status of the pet
         type:
           type: string
-          description: The type of the pet
     AddPetResponse:
       type: object
       properties:
         petId:
           type: string
-          description: The ID of the added pet
         message:
           type: string
-          description: Success message
     GetPetResponse:
       type: object
       properties:
         petId:
           type: string
-          description: The ID of the pet
         name:
           type: string
-          description: The name of the pet
         breed:
           type: string
-          description: The breed of the pet
         status:
           type: string
-          description: The status of the pet
         type:
           type: string
-          description: The type of the pet
     ListPetsResponse:
-      type: array
-      items:
-        type: object
-        properties:
-          petId:
-            type: string
-            description: The ID of the pet
-          name:
-            type: string
-            description: The name of the pet
-          breed:
-            type: string
-            description: The breed of the pet
-          status:
-            type: string
-            description: The status of the pet
-          type:
-            type: string
-            description: The type of the pet
+      type: object
+      properties:
+        pets:
+          type: array
+          items:
+            $ref: '#/components/schemas/Pet'
+    Pet:
+      type: object
+      properties:
+        petId:
+          type: string
+        name:
+          type: string
+        breed:
+          type: string
+        status:
+          type: string
+        type:
+          type: string
     DeletePetResponse:
       type: object
       properties:
         message:
           type: string
-          description: Success message
+        petId:
+          type: string
     UpdatePetRequest:
       type: object
       properties:
         name:
           type: string
-          description: The name of the pet
         breed:
           type: string
-          description: The breed of the pet
         status:
           type: string
-          description: The status of the pet
         type:
           type: string
-          description: The type of the pet
     UpdatePetResponse:
       type: object
       properties:
-        petId:
+        message:
           type: string
-          description: The ID of the pet
-        name:
-          type: string
-          description: The name of the pet
-        breed:
-          type: string
-          description: The breed of the pet
-        status:
-          type: string
-          description: The status of the pet
-        type:
-          type: string
-          description: The type of the pet
-  securitySchemes: {}
+        pet:
+          $ref: '#/components/schemas/Pet'
+    petId:
+      type: string
+    foundationId:
+      type: string
+    type:
+      type: string
+    breed:
+      type: string
+    name:
+      type: string
 info:
   title: Alegra Pets API
-  description: API for managing pets within foundations.
-  version: '1'
-paths: {}
+  description: API for managing pets.
+  version: 1.0.0
+  termsOfService: https://example.com/terms
+paths:
+  /foundations:
+    post:
+      summary: Create Foundation
+      description: Creates a new foundation
+      operationId: createFoundation
+      parameters: []
+      tags: []
+      requestBody:
+        description: New foundation data
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFoundationRequest'
+      responses:
+        '201':
+          description: Foundation created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateFoundationResponse'
+          headers: {}
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenResponse'
+          headers: {}
+  /pets:
+    post:
+      summary: Add a new pet
+      description: Adds a new pet to the foundation after verifying foundation access.
+      operationId: addPet
+      parameters: []
+      tags: []
+      requestBody:
+        description: Pet details to add
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddPetRequest'
+      responses:
+        '201':
+          description: Pet added successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddPetResponse'
+          headers: {}
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenResponse'
+          headers: {}
+  /pets/{petId}:
+    get:
+      summary: Get Pet
+      description: Retrieve a pet by ID
+      operationId: getPet
+      parameters:
+        - name: petId
+          in: path
+          description: ''
+          required: true
+          schema:
+            $ref: '#/components/schemas/petId'
+      tags: []
+      responses:
+        '200':
+          description: Pet details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetPetResponse'
+          headers: {}
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenResponse'
+          headers: {}
+    delete:
+      summary: Delete Pet
+      description: Deletes a pet by its ID.
+      operationId: deletePet
+      parameters:
+        - name: petId
+          in: path
+          description: ''
+          required: true
+          schema:
+            $ref: '#/components/schemas/petId'
+      tags: []
+      responses:
+        '200':
+          description: Pet successfully deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletePetResponse'
+          headers: {}
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenResponse'
+          headers: {}
+    put:
+      summary: Update Pet
+      description: Updates a pet by its ID.
+      operationId: updatePet
+      parameters:
+        - name: petId
+          in: path
+          description: ''
+          required: true
+          schema:
+            $ref: '#/components/schemas/petId'
+      tags: []
+      requestBody:
+        description: Fields to update in the pet record.
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePetRequest'
+      responses:
+        '200':
+          description: Pet successfully updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdatePetResponse'
+          headers: {}
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenResponse'
+          headers: {}
+  /foundations/{foundationId}/pets:
+    get:
+      summary: List Pets
+      description: Lists pets for a foundation with optional filters.
+      operationId: listPets
+      parameters:
+        - name: foundationId
+          in: path
+          description: ''
+          required: true
+          schema:
+            $ref: '#/components/schemas/foundationId'
+        - name: type
+          in: query
+          description: ''
+          required: false
+          schema:
+            $ref: '#/components/schemas/type'
+        - name: breed
+          in: query
+          description: ''
+          required: false
+          schema:
+            $ref: '#/components/schemas/breed'
+        - name: name
+          in: query
+          description: ''
+          required: false
+          schema:
+            $ref: '#/components/schemas/name'
+      tags: []
+      responses:
+        '200':
+          description: Array of pets that match the provided filters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListPetsResponse'
+          headers: {}
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenResponse'
+          headers: {}

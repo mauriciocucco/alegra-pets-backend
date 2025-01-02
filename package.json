@@ -13,6 +13,6 @@
     "install": "^0.13.0",
     "npm": "^11.0.0",
     "serverless-dotenv-plugin": "^6.0.0",
-    "serverless-openapi-documentation": "^0.4.0"
+    "serverless-openapi-documenter": "^0.0.109"
   }
 }
