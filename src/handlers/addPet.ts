@@ -19,9 +19,15 @@ export const addPetHandler = async (
     const status = body.status ?? "adoptable";
     const breed = body.breed ?? "unknown";
     const foundationId = body.foundationId;
+    const userFoundationId =
+      event.requestContext?.authorizer?.lambda?.userFoundationId;
 
     if (!foundationId) {
       return createHTTPResponse({ message: "foundationId is required" }, 400);
+    }
+
+    if (userFoundationId !== foundationId) {
+      return createHTTPResponse({ message: "Unauthorized" }, 403);
     }
 
     console.log("Adding new pet:", body);

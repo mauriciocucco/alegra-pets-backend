@@ -3,7 +3,8 @@ import { APIGatewayAuthorizerResult } from "aws-lambda";
 export const buildIAMPolicy = (
   principalId: string,
   effect: string,
-  resource: string
+  resource: string,
+  context?: { [key: string]: any }
 ): APIGatewayAuthorizerResult => {
   const policy: APIGatewayAuthorizerResult = {
     principalId,
@@ -17,6 +18,7 @@ export const buildIAMPolicy = (
         },
       ],
     },
+    context,
   };
 
   console.log("IAM Policy:", JSON.stringify(policy, null, 2));

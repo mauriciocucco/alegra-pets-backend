@@ -5,7 +5,8 @@ import { PetItem } from "../interfaces/petItem.interface";
 
 export async function verifyFoundationAccess(
   path: string,
-  userFoundationId: string | undefined
+  userFoundationId: string | undefined,
+  requestBody?: Record<string, any>
 ): Promise<void> {
   if (!userFoundationId) {
     throw new Error("User foundation ID not found.");

@@ -12,6 +12,8 @@ export const handler = async (
 ): Promise<APIGatewayAuthorizerResult> => {
   const resourceArn = constructResourceArn(event);
 
+  console.log("Authorizer event: ", event);
+
   try {
     const authHeader = event.headers?.authorization || "";
 
@@ -32,7 +34,9 @@ export const handler = async (
 
     await verifyFoundationAccess(path, userFoundationId);
 
-    return buildIAMPolicy(user.email, "Allow", resourceArn);
+    return buildIAMPolicy(user.email, "Allow", resourceArn, {
+      userFoundationId,
+    });
   } catch (error) {
     console.error("Authorizer error: ", error);
 
